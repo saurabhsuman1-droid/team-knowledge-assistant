@@ -1,4 +1,4 @@
-# Day 1 Prompt Learnings
+# Day 1 Prompt Learnings (Better prompts → Better code)
 
 ## Observations
 - Prompt clarity matters: explicitly listing Java version, build tool, and exact Spring starters made scaffold generation deterministic.
