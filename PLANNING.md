@@ -317,7 +317,10 @@ Learn
 
 Study:
 
-https://docs.github.com/en/copilot/using-github-copilot/prompt-engineering-for-github-copilot
+https://docs.github.com/en/copilot/using-github-copilot/prompt-engineering-for-github-copilot  
+https://github.blog/developer-skills/github/how-to-write-better-prompts-for-github-copilot/?ref_product=copilot&ref_type=engagement&ref_style=text   
+https://github.blog/engineering/prompt-engineering-guide-generative-ai-llms/  
+https://github.blog/developer-skills/github/prompting-github-copilot-chat-to-become-your-personal-ai-assistant-for-accessibility/?ref_product=copilot&ref_type=engagement&ref_style=text
 
 Practice
 
