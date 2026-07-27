@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/teamknowledge}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:teamknowledge}
+    password: ${DB_PASSWORD:teamknowledge}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  h2:
+    console:
+      enabled: false

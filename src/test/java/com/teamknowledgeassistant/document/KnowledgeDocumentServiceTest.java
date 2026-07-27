@@ -4,9 +4,15 @@ import com.teamknowledgeassistant.common.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -17,6 +23,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -84,12 +91,47 @@ class KnowledgeDocumentServiceTest {
 
     @Test
     void findAll_returnsAllDocumentsMappedToResponses() {
-        when(repository.findAll()).thenReturn(List.of(document));
+        Page<KnowledgeDocument> page = new PageImpl<>(List.of(document));
+        when(repository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
 
-        List<KnowledgeDocumentResponse> responses = service.findAll();
+        KnowledgeDocumentPageResponse responses = service.search(null, null, null, 0, 20, List.of("updatedAt,desc"));
 
-        assertThat(responses).hasSize(1);
-        assertThat(responses.get(0).id()).isEqualTo(documentId);
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(repository).findAll(any(Specification.class), pageableCaptor.capture());
+        Pageable pageable = pageableCaptor.getValue();
+
+        assertThat(pageable.getPageNumber()).isEqualTo(0);
+        assertThat(pageable.getPageSize()).isEqualTo(20);
+        assertThat(pageable.getSort().getOrderFor("updatedAt")).isEqualTo(new Sort.Order(Sort.Direction.DESC, "updatedAt"));
+        assertThat(responses.items()).hasSize(1);
+        assertThat(responses.items().get(0).id()).isEqualTo(documentId);
+    }
+
+    @Test
+    void search_withUnsupportedSortField_throwsIllegalArgumentException() {
+        assertThatThrownBy(() -> service.search(null, null, null, 0, 20, List.of("content,asc")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Unsupported sort field");
+    }
+
+    @Test
+    void search_withInvalidPageSize_throwsIllegalArgumentException() {
+        assertThatThrownBy(() -> service.search(null, null, null, 0, 101, List.of("updatedAt,desc")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Size must be between 1 and 100");
+    }
+
+    @Test
+    void search_withBlankSort_usesDefaultUpdatedAtDesc() {
+        Page<KnowledgeDocument> page = new PageImpl<>(List.of(document));
+        when(repository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+
+        service.search(null, null, null, 0, 20, List.of(" "));
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(repository, times(1)).findAll(any(Specification.class), pageableCaptor.capture());
+        Sort.Order order = pageableCaptor.getValue().getSort().getOrderFor("updatedAt");
+        assertThat(order).isEqualTo(new Sort.Order(Sort.Direction.DESC, "updatedAt"));
     }
 
     @Test

@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -93,10 +92,13 @@ class KnowledgeDocumentControllerTest {
 
     @Test
     void findAll_withCategoryFilter_delegatesToService() throws Exception {
-        when(service.findByCategory(eq("Runbook"))).thenReturn(List.of());
+        KnowledgeDocumentPageResponse response = new KnowledgeDocumentPageResponse(List.of(), 0, 20, 0, 0, false, false);
+        when(service.search(any(), any(), any(), any(), any(), any())).thenReturn(response);
 
         mockMvc.perform(get("/api/documents").param("category", "Runbook"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.items").isArray());
     }
 
     @Test

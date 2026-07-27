@@ -40,21 +40,15 @@ public class KnowledgeDocumentController {
     }
 
     @GetMapping
-    @Operation(summary = "List knowledge documents, optionally filtered by category, tag, or title")
-    public List<KnowledgeDocumentResponse> findAll(
+    @Operation(summary = "List knowledge documents with optional composable filters, pagination, and sorting")
+    public KnowledgeDocumentPageResponse findAll(
             @RequestParam(required = false) @Parameter(description = "Filter by exact category") String category,
             @RequestParam(required = false) @Parameter(description = "Filter by tag") String tag,
-            @RequestParam(required = false) @Parameter(description = "Filter by title (contains, case-insensitive)") String title) {
-        if (category != null && !category.isBlank()) {
-            return service.findByCategory(category);
-        }
-        if (tag != null && !tag.isBlank()) {
-            return service.findByTag(tag);
-        }
-        if (title != null && !title.isBlank()) {
-            return service.searchByTitle(title);
-        }
-        return service.findAll();
+            @RequestParam(required = false) @Parameter(description = "Filter by title (contains, case-insensitive)") String title,
+            @RequestParam(defaultValue = "0") @Parameter(description = "Page number (0-based)") Integer page,
+            @RequestParam(defaultValue = "20") @Parameter(description = "Page size (1-100)") Integer size,
+            @RequestParam(required = false) @Parameter(description = "Sort fields, e.g. sort=updatedAt,desc") List<String> sort) {
+        return service.search(title, category, tag, page, size, sort);
     }
 
     @GetMapping("/{id}")
