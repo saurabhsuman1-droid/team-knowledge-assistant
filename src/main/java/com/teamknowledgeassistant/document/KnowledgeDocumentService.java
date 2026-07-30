@@ -1,5 +1,6 @@
 package com.teamknowledgeassistant.document;
 
+import com.teamknowledgeassistant.common.exception.ResourceAlreadyExistsException;
 import com.teamknowledgeassistant.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -35,6 +36,10 @@ public class KnowledgeDocumentService {
     private final KnowledgeDocumentRepository repository;
 
     public KnowledgeDocumentResponse create(CreateKnowledgeDocumentRequest request) {
+        if (repository.existsByTitleIgnoreCase(request.title().trim())) {
+            throw new ResourceAlreadyExistsException("A document with the same title already exists");
+        }
+
         KnowledgeDocument document = new KnowledgeDocument();
         document.setTitle(request.title());
         document.setContent(request.content());
@@ -83,6 +88,12 @@ public class KnowledgeDocumentService {
 
     public KnowledgeDocumentResponse update(UUID id, UpdateKnowledgeDocumentRequest request) {
         KnowledgeDocument document = getOrThrow(id);
+        String requestedTitle = request.title().trim();
+        if (!document.getTitle().trim().equalsIgnoreCase(requestedTitle)
+                && repository.existsByTitleIgnoreCase(requestedTitle)) {
+            throw new ResourceAlreadyExistsException("A document with the same title already exists");
+        }
+
         document.setTitle(request.title());
         document.setContent(request.content());
         document.setCategory(request.category());
