@@ -1,5 +1,6 @@
 package com.teamknowledgeassistant.document;
 
+import com.teamknowledgeassistant.common.exception.ResourceAlreadyExistsException;
 import com.teamknowledgeassistant.common.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,6 +61,7 @@ class KnowledgeDocumentServiceTest {
                 "Runbook",
                 Set.of("deployment", "ops")
         );
+        when(repository.existsByTitleIgnoreCase("Deployment Runbook")).thenReturn(false);
         when(repository.save(any(KnowledgeDocument.class))).thenReturn(document);
 
         KnowledgeDocumentResponse response = service.create(request);
@@ -68,6 +70,22 @@ class KnowledgeDocumentServiceTest {
         assertThat(response.title()).isEqualTo("Deployment Runbook");
         assertThat(response.tags()).containsExactlyInAnyOrder("deployment", "ops");
         verify(repository, times(1)).save(any(KnowledgeDocument.class));
+    }
+
+    @Test
+    void create_whenTitleAlreadyExists_throwsResourceAlreadyExistsException() {
+        CreateKnowledgeDocumentRequest request = new CreateKnowledgeDocumentRequest(
+                "Deployment Runbook",
+                "Steps to deploy the service safely to production.",
+                "Runbook",
+                Set.of("deployment", "ops")
+        );
+        when(repository.existsByTitleIgnoreCase("Deployment Runbook")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.create(request))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage("A document with the same title already exists");
+        verify(repository, never()).save(any(KnowledgeDocument.class));
     }
 
     @Test
@@ -143,12 +161,30 @@ class KnowledgeDocumentServiceTest {
                 Set.of("updated")
         );
         when(repository.findById(documentId)).thenReturn(Optional.of(document));
+        when(repository.existsByTitleIgnoreCase("Updated Title")).thenReturn(false);
         when(repository.save(any(KnowledgeDocument.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         KnowledgeDocumentResponse response = service.update(documentId, request);
 
         assertThat(response.title()).isEqualTo("Updated Title");
         assertThat(response.tags()).containsExactly("updated");
+    }
+
+    @Test
+    void update_whenChangingTitleToExistingTitle_throwsResourceAlreadyExistsException() {
+        UpdateKnowledgeDocumentRequest request = new UpdateKnowledgeDocumentRequest(
+                "Existing Runbook",
+                "Updated content that is long enough to satisfy validation.",
+                "Runbook",
+                Set.of("updated")
+        );
+        when(repository.findById(documentId)).thenReturn(Optional.of(document));
+        when(repository.existsByTitleIgnoreCase("Existing Runbook")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.update(documentId, request))
+                .isInstanceOf(ResourceAlreadyExistsException.class)
+                .hasMessage("A document with the same title already exists");
+        verify(repository, never()).save(any(KnowledgeDocument.class));
     }
 
     @Test
