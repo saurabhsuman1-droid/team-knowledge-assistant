@@ -10,6 +10,8 @@ import java.util.UUID;
 
 public interface KnowledgeDocumentRepository extends JpaRepository<KnowledgeDocument, UUID>, JpaSpecificationExecutor<KnowledgeDocument> {
 
+    boolean existsByTitleIgnoreCase(String title);
+
     List<KnowledgeDocument> findByTitleContainingIgnoreCase(String title);
 
     List<KnowledgeDocument> findByCategoryIgnoreCase(String category);

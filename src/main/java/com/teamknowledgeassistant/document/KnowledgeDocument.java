@@ -59,7 +59,7 @@ public class KnowledgeDocument extends AuditableEntity {
     @NotBlank(message = "Content is required")
     @Size(min = 10, max = 20000, message = "Content must be between 10 and 20000 characters")
     @Lob
-    @Column(name = "content", nullable = false, columnDefinition = "CLOB")
+    @Column(name = "content", nullable = false)
     private String content;
 
     @NotBlank(message = "Category is required")
